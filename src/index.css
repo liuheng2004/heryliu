@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", "Outfit", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-neo-pink: #FF90E8;
+  --color-neo-yellow: #FFD900;
+  --color-neo-blue: #00D1FF;
+  --color-neo-purple: #B08CFF;
+  --color-neo-green: #00FF00;
+  
+  --shadow-neo: 4px 4px 0px 0px #000000;
+  --shadow-neo-lg: 8px 8px 0px 0px #000000;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-black font-sans antialiased;
+  }
+}
+
+@layer components {
+  .neo-box {
+    @apply border-4 border-black rounded-xl bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
+  }
+  
+  .neo-button-black {
+    @apply inline-flex items-center gap-2 px-6 py-3 border-4 border-black rounded-xl font-black transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-none bg-black text-white hover:bg-zinc-800;
+  }
+
+  .neo-button-white {
+    @apply inline-flex items-center gap-2 px-6 py-3 border-4 border-black rounded-xl font-black transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-none bg-white text-black hover:bg-zinc-50;
+  }
+
+  .highlight-pink {
+    @apply bg-neo-pink px-2 border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .highlight-blue {
+    @apply bg-neo-blue px-2 border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
+  }
+
+  .highlight-yellow {
+    @apply bg-neo-yellow px-2 border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
+  }
+}

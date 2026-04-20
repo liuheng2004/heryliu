@@ -3,11 +3,10 @@
 @theme {
   --font-sans: "Inter", "Outfit", ui-sans-serif, system-ui, sans-serif;
   
-  --color-neo-pink: #FF90E8;
-  --color-neo-yellow: #FFD900;
-  --color-neo-blue: #00D1FF;
-  --color-neo-purple: #B08CFF;
-  --color-neo-green: #00FF00;
+  --color-mint: #59c18b;
+  --color-dark-bg: #0a0a0f;
+  --color-card-bg: rgba(255, 255, 255, 0.03);
+  --color-card-border: rgba(255, 255, 255, 0.08);
   
   --shadow-neo: 4px 4px 0px 0px #000000;
   --shadow-neo-lg: 8px 8px 0px 0px #000000;
@@ -15,32 +14,42 @@
 
 @layer base {
   body {
-    @apply bg-white text-black font-sans antialiased;
+    @apply bg-dark-bg text-white font-sans antialiased;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      radial-gradient(circle at 85% 30%, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 100px 100px;
   }
 }
 
 @layer components {
-  .neo-box {
-    @apply border-4 border-black rounded-xl bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)];
+  .glass-card {
+    @apply bg-card-bg border border-card-border rounded-2xl backdrop-blur-sm relative overflow-hidden;
   }
   
+  .glass-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 70%);
+  }
+
+  .glass-card:hover::before {
+    @apply opacity-100;
+  }
+  
+  .glow-orb {
+    @apply absolute rounded-full blur-[80px] opacity-40 pointer-events-none;
+  }
+
+  /* Legacy classes for other pages */
+  .neo-box {
+    @apply border-4 border-black rounded-xl bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] text-black;
+  }
   .neo-button-black {
     @apply inline-flex items-center gap-2 px-6 py-3 border-4 border-black rounded-xl font-black transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-none bg-black text-white hover:bg-zinc-800;
   }
-
   .neo-button-white {
     @apply inline-flex items-center gap-2 px-6 py-3 border-4 border-black rounded-xl font-black transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-0 active:translate-y-0 active:shadow-none bg-white text-black hover:bg-zinc-50;
-  }
-
-  .highlight-pink {
-    @apply bg-neo-pink px-2 border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
-  }
-
-  .highlight-blue {
-    @apply bg-neo-blue px-2 border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
-  }
-
-  .highlight-yellow {
-    @apply bg-neo-yellow px-2 border-3 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)];
   }
 }

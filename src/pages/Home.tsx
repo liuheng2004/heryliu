@@ -112,7 +112,7 @@ export default function Home() {
         <div className="md:w-1/3 aspect-[3/4] md:aspect-auto rounded-2xl overflow-hidden border border-white/10 relative group perspective-1000 shadow-[0_0_30px_rgba(89,193,139,0.15)] transition-all duration-700 hover:shadow-[0_0_50px_rgba(89,193,139,0.4)]">
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
           <img 
-            src="/hero-portrait.png" 
+            src="../public/myphoto.jpg" 
             alt="Portrait" 
             className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1" 
           />

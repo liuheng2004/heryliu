@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Navbar, Footer } from './components/Navigation';
 import Home from './pages/Home';
+import Journey from './pages/Journey';
 import { Starfield } from './components/Starfield';
 
 const PlaceholderPage = ({ title }: { title: string }) => (
@@ -22,7 +23,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<PlaceholderPage title="关于我" />} />
           <Route path="/projects" element={<PlaceholderPage title="我的项目" />} />
-          <Route path="/journey" element={<PlaceholderPage title="我的旅程" />} />
+          <Route path="/journey" element={<Journey />} />
           <Route path="/gallery" element={<PlaceholderPage title="我的相册" />} />
           <Route path="/contact" element={<PlaceholderPage title="联系我" />} />
           <Route path="*" element={<Home />} />

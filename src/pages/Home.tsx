@@ -112,7 +112,7 @@ export default function Home() {
         <div className="md:w-1/3 aspect-[3/4] md:aspect-auto rounded-2xl overflow-hidden border border-white/10 relative group perspective-1000 shadow-[0_0_30px_rgba(89,193,139,0.15)] transition-all duration-700 hover:shadow-[0_0_50px_rgba(89,193,139,0.4)]">
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
           <img 
-            src="../public/myphoto.jpg" 
+            src="/myphoto.jpg" 
             alt="Portrait" 
             className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1" 
           />
@@ -131,24 +131,19 @@ export default function Home() {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[
-              { icon: '🛹', title: '滑板', sub: '驾驭栏杆' },
-              { icon: '🦢', title: '折纸', sub: '折纸艺术' },
               { icon: '🎬', title: '摄影', sub: '捕捉瞬间' },
-              { icon: '🎭', title: '表演', sub: '演绎角色' },
-              { icon: '💃', title: '舞蹈', sub: '随节奏舞动' },
-              { icon: '😂', title: '梗图创作', sub: '制造欢笑' },
+
               { icon: '💪', title: '力量举重', sub: '增强力量' },
               { icon: '🏃', title: '跑步', sub: '追逐目标' },
-              { icon: '🤸', title: '徒手健身', sub: '掌控身体' },
               { icon: '👨‍🍳', title: '烹饪', sub: '厨艺多面手' },
               { icon: '💻', title: '编程', sub: '构建解决方案' },
               { icon: '📚', title: '持续学习', sub: '每天都在成长' },
             ].map((hobby, i) => (
-              <div key={i} className="bg-white/5 border border-white/5 rounded-xl p-6 text-center hover:bg-white/10 transition-colors flex flex-col items-center justify-center gap-3">
-                <div className="text-4xl drop-shadow-lg">{hobby.icon}</div>
+              <div key={i} className="bg-white/5 border border-white/5 rounded-xl p-5 text-center hover:bg-white/10 hover:border-mint/20 transition-all flex flex-col items-center justify-center gap-2">
+                <div className="text-3xl">{hobby.icon}</div>
                 <div>
-                  <h3 className="text-white font-medium text-sm">{hobby.title}</h3>
-                  <p className="text-gray-500 text-xs mt-1">{hobby.sub}</p>
+                  <h3 className="text-white font-medium text-xs">{hobby.title}</h3>
+                  <p className="text-gray-500 text-[10px] mt-0.5">{hobby.sub}</p>
                 </div>
               </div>
             ))}
@@ -160,56 +155,24 @@ export default function Home() {
       <section className="px-6 max-w-6xl mx-auto">
         <div className="glass-card p-10">
           <h2 className="text-3xl font-bold text-white text-center mb-16">我的 Ikigai - 寻找人生意义</h2>
-          
-          <div className="flex flex-col md:flex-row gap-12 items-center">
-            {/* Venn Diagram Visual (Simplified CSS version) */}
-            <div className="flex-1 relative w-full max-w-md aspect-square flex items-center justify-center">
-              <div className="absolute top-[20%] left-[20%] w-[50%] h-[50%] border border-white/10 bg-white/5 rounded-full flex items-start justify-center pt-8 text-xs text-gray-400">
-                <span className="text-center">我热爱什么<br/><span className="text-[10px]">爱好</span></span>
-              </div>
-              <div className="absolute top-[20%] right-[20%] w-[50%] h-[50%] border border-white/10 bg-white/5 rounded-full flex items-start justify-center pt-8 text-xs text-gray-400">
-                <span className="text-center">我擅长什么</span>
-              </div>
-              <div className="absolute bottom-[20%] left-[20%] w-[50%] h-[50%] border border-white/10 bg-white/5 rounded-full flex items-end justify-center pb-8 text-xs text-gray-400">
-                <span className="text-center">别人愿意付钱<br/>让我做什么</span>
-              </div>
-              <div className="absolute bottom-[20%] right-[20%] w-[50%] h-[50%] border border-white/10 bg-white/5 rounded-full flex items-end justify-center pb-8 text-xs text-gray-400">
-                <span className="text-center">世界需要什么</span>
-              </div>
-              
-              {/* Center IKIGAI */}
-              <div className="absolute z-10 w-20 h-20 bg-mint rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(89,193,139,0.4)]">
-                <span className="text-dark-bg font-bold text-sm tracking-wider">IKIGAI</span>
-              </div>
-            </div>
-            
-            {/* Lists */}
-            <div className="flex-1 space-y-8">
+
+          <div className="space-y-8 text-center">
               <div>
                 <h3 className="text-white font-medium mb-2 text-sm">我热爱什么</h3>
-                <p className="text-gray-400 text-xs leading-relaxed">摄影、编程、力量举重、舞蹈、表演、滑板、烹饪、折纸、跑步、徒手健身</p>
+                <p className="text-gray-400 text-xs leading-relaxed">摄影、编程、力量举重、烹饪、跑步、<span className="text-mint">旅游</span></p>
               </div>
               <div>
                 <h3 className="text-white font-medium mb-2 text-sm">我擅长什么</h3>
-                <p className="text-gray-400 text-xs leading-relaxed">数字营销、编程、内容创作、农业、景观设计、广告、设计</p>
+                <p className="text-gray-400 text-xs leading-relaxed">设计、<span className="text-mint">vibe coding</span>、内容创作</p>
               </div>
-              <div>
-                <h3 className="text-white font-medium mb-2 text-sm">世界需要什么</h3>
-                <p className="text-gray-400 text-xs leading-relaxed">可持续农业、环境解决方案、数字化转型、健康与保健</p>
-              </div>
-              <div>
-                <h3 className="text-white font-medium mb-2 text-sm">别人愿意付钱让我做什么</h3>
-                <p className="text-gray-400 text-xs leading-relaxed">增长营销、农业咨询、网站开发、内容制作、品牌战略</p>
-              </div>
-              
-              <div className="pt-6 border-t border-white/10 flex items-start gap-3">
-                <div className="w-2 h-2 rounded-full bg-mint mt-1 shrink-0"></div>
+
+              <div className="pt-6 border-t border-white/10 flex items-center justify-center gap-3">
+                <div className="w-2 h-2 rounded-full bg-mint shrink-0"></div>
                 <p className="text-gray-400 text-xs italic">
-                  我的 Ikigai 位于交汇处：通过数字创新和农业专业知识创造可持续的解决方案。
+                  我的 Ikigai 位于交汇处：用设计与技术创造有价值的产品。
                 </p>
               </div>
             </div>
-          </div>
         </div>
       </section>
 

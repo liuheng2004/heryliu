@@ -540,14 +540,25 @@ export default function Journey() {
 
                 return (
                   <g key={prov.adcode}>
+                    {/* 悬浮发光层 */}
+                    {isHovered && isOverview && (
+                      <path
+                        d={prov.path}
+                        fill="rgba(89, 193, 139, 0.15)"
+                        stroke="rgba(89, 193, 139, 0.6)"
+                        strokeWidth="1.5"
+                        className="pointer-events-none"
+                        style={{ animation: 'province-pulse 1.5s ease-in-out infinite' }}
+                      />
+                    )}
                     {/* 省份轮廓 */}
                     <path
                       d={prov.path}
-                      fill={isActive ? 'rgba(89, 193, 139, 0.15)' : isHovered ? 'rgba(89, 193, 139, 0.08)' : 'transparent'}
-                      stroke="white"
-                      strokeWidth={isActive ? (() => { const b = getPathBounds(prov.path); const pw = Math.max(b.maxX - b.minX, 1); return Math.max(0.02, 0.3 * Math.min(1, pw / 30)); })() : 0.8}
+                      fill={isActive ? 'rgba(89, 193, 139, 0.15)' : isHovered ? 'rgba(89, 193, 139, 0.12)' : 'transparent'}
+                      stroke={isActive ? 'rgba(255,255,255,0.3)' : isHovered && isOverview ? 'rgba(89, 193, 139, 0.9)' : 'white'}
+                      strokeWidth={isActive ? (() => { const b = getPathBounds(prov.path); const pw = Math.max(b.maxX - b.minX, 1); const ph = Math.max(b.maxY - b.minY, 1); const pSize = Math.sqrt(pw * ph); const scale = Math.max(0.3, Math.min(2.5, pSize / 32)); return 0.18 * scale; })() : isHovered && isOverview ? 1.2 : 0.8}
                       strokeDasharray={isOverview ? '4 3' : 'none'}
-                      strokeOpacity={isOverview ? 0.7 : 1}
+                      strokeOpacity={isOverview ? (isHovered ? 1 : 0.7) : 1}
                       className="cursor-pointer transition-all duration-300"
                       onMouseEnter={() => setHoveredProvince(prov.name)}
                       onMouseLeave={() => setHoveredProvince(null)}
@@ -574,42 +585,116 @@ export default function Journey() {
                 );
               })()}
 
-              {/* 城市标记（省份视图）- 等比例缩放 */}
+              {/* 城市标记（省份视图）- 根据省份范围自适应排版 */}
               {!isOverview && (() => {
+                // 根据省份地理范围动态计算缩放比例
                 const pBounds = currentProvince ? getPathBounds(currentProvince.path) : null;
-                // 根据省份地理范围标准化视觉尺寸
                 const pW = pBounds ? Math.max(pBounds.maxX - pBounds.minX, 1) : 30;
-                const sizeNorm = pW > 30 ? Math.min(2, pW / 30) : 1;
-                const cityScale = currentCities.length > 10
-                  ? Math.max(0.6, 1 - (currentCities.length - 10) * 0.025)
-                  : 1;
-                const scale = Math.min(1, cityScale * sizeNorm);
-                const dotR = (0.7 * scale).toFixed(2);
-                const txtSize = (2.5 * scale).toFixed(1);
-                const txtOff = (2.5 * scale).toFixed(1);
-                const txtYOff = (0.5 * scale).toFixed(1);
-                return currentCities.map((city) => {
-                  const pos = geoToSvg(city.lon, city.lat);
-                  return (
-                    <g key={city.name}>
-                      <circle
-                        cx={pos.x}
-                        cy={pos.y}
-                        r={dotR}
-                        fill="#59c18b"
-                      />
-                      <text
-                        x={pos.x + parseFloat(txtOff)}
-                        y={pos.y + parseFloat(txtYOff)}
-                        fill="rgba(255,255,255,0.85)"
-                        fontSize={txtSize}
-                        className="select-none"
-                      >
-                        {city.name}
-                      </text>
-                    </g>
+                const pH = pBounds ? Math.max(pBounds.maxY - pBounds.minY, 1) : 30;
+                const pSize = Math.sqrt(pW * pH); // 省份面积开方，综合反映大小
+                const REF_SIZE = 32;
+                const cityCount = currentCities.length;
+
+                let scale = pSize / REF_SIZE;
+
+                // 密集省份（城市多面积小）进一步缩小
+                const density = cityCount / Math.max((pW * pH) / 500, 0.3);
+                if (density > 2.0) scale *= 0.55;
+                else if (density > 1.2) scale *= 0.75;
+                else if (density > 0.7) scale *= 0.88;
+
+                scale = Math.max(0.3, Math.min(2.5, scale));
+
+                const DOT_R = 0.5 * scale;
+                const TXT_SIZE = 2.5 * scale;
+                const TXT_OFFSET = 2.6 * scale;
+                const EST_CHAR_W = 1.65 * scale;
+                const EST_LINE_H = 3.0 * scale;
+                const BBOX_PAD_X = 0.15 * scale;
+                const BBOX_PAD_Y = 0.12 * scale;
+
+                const estLabelW = (name: string) => name.length * EST_CHAR_W;
+
+                interface Box { x: number; y: number; w: number; h: number }
+                const placed: Box[] = [];
+
+                const hasOverlap = (bx: number, by: number, bw: number, bh: number): boolean =>
+                  placed.some(p =>
+                    bx + bw + BBOX_PAD_X > p.x && p.x + p.w + BBOX_PAD_X > bx &&
+                    by + bh + BBOX_PAD_Y > p.y && p.y + p.h + BBOX_PAD_Y > by
                   );
-                });
+
+                const sorted = [...currentCities]
+                  .map(city => ({ ...city, pos: geoToSvg(city.lon, city.lat) }))
+                  .sort((a, b) => a.pos.y - b.pos.y);
+
+                interface Label {
+                  name: string;
+                  cx: number; cy: number;
+                  lx: number; ly: number;
+                  anchor: 'start' | 'end';
+                }
+                const labels: Label[] = [];
+
+                const candidates: [number, number, 'start' | 'end'][] = [
+                  [1, 0, 'start'],
+                  [-1, 0, 'end'],
+                  [1, -1.2, 'start'],
+                  [-1, -1.2, 'end'],
+                  [1, 1.2, 'start'],
+                  [-1, 1.2, 'end'],
+                ];
+
+                for (const city of sorted) {
+                  const { x, y } = city.pos;
+                  const tw = estLabelW(city.name);
+                  const th = EST_LINE_H;
+
+                  let placed_ok = false;
+                  for (const [dx, dy, anchor] of candidates) {
+                    const lx = x + dx * TXT_OFFSET;
+                    const ly = y + dy * TXT_OFFSET;
+                    const bx = anchor === 'start' ? lx - BBOX_PAD_X : lx - tw + BBOX_PAD_X;
+                    const by = ly - th / 2;
+
+                    if (!hasOverlap(bx, by, tw, th)) {
+                      labels.push({ name: city.name, cx: x, cy: y, lx, ly, anchor });
+                      placed.push({ x: bx, y: by, w: tw, h: th });
+                      placed_ok = true;
+                      break;
+                    }
+                  }
+
+                  if (!placed_ok) {
+                    const lx = x + TXT_OFFSET;
+                    const ly = y;
+                    labels.push({ name: city.name, cx: x, cy: y, lx, ly, anchor: 'start' });
+                    placed.push({ x: lx - BBOX_PAD_X, y: ly - th / 2, w: tw, h: th });
+                  }
+                }
+
+                return labels.map(label => (
+                  <g key={label.name}>
+                    <circle
+                      cx={label.cx}
+                      cy={label.cy}
+                      r={DOT_R}
+                      fill="#59c18b"
+                    />
+                    <text
+                      x={label.lx}
+                      y={label.ly}
+                      fill="rgba(255,255,255,0.9)"
+                      fontSize={TXT_SIZE}
+                      fontFamily="sans-serif"
+                      textAnchor={label.anchor}
+                      dominantBaseline="central"
+                      className="select-none"
+                    >
+                      {label.name}
+                    </text>
+                  </g>
+                ));
               })()}
             </svg>
           </div>

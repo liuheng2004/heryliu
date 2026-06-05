@@ -1,54 +1,9 @@
 import React, { useState } from 'react';
 import { MapPin, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import provinceData from '../data/china-provinces.json';
-
-// 城市数据（visited: true=已去过绿色, false=未去过灰色）
-const PROVINCE_CITIES: Record<string, { name: string; lat: number; lon: number; visited: boolean }[]> = {
-  '浙江省': [
-    { name: '杭州', lat: 30.25, lon: 120.17, visited: true },
-    { name: '宁波', lat: 29.87, lon: 121.55, visited: false },
-    { name: '温州', lat: 28.00, lon: 120.70, visited: false },
-    { name: '绍兴', lat: 30.00, lon: 120.58, visited: false },
-    { name: '嘉兴', lat: 30.77, lon: 120.75, visited: false },
-    { name: '湖州', lat: 30.87, lon: 120.10, visited: false },
-    { name: '金华', lat: 29.08, lon: 119.65, visited: false },
-    { name: '台州', lat: 28.66, lon: 121.42, visited: false },
-    { name: '丽水', lat: 28.45, lon: 119.92, visited: false },
-    { name: '衢州', lat: 28.95, lon: 118.87, visited: false },
-    { name: '舟山', lat: 30.02, lon: 122.11, visited: true },
-  ],
-  '湖南省': [
-    { name: '长沙', lat: 28.23, lon: 112.93, visited: true },
-    { name: '株洲', lat: 27.83, lon: 113.13, visited: false },
-    { name: '湘潭', lat: 27.83, lon: 112.93, visited: false },
-    { name: '衡阳', lat: 26.90, lon: 112.57, visited: false },
-    { name: '岳阳', lat: 29.35, lon: 113.12, visited: false },
-    { name: '常德', lat: 29.05, lon: 111.70, visited: false },
-    { name: '张家界', lat: 29.12, lon: 110.48, visited: true },
-    { name: '怀化', lat: 27.55, lon: 109.97, visited: true },
-    { name: '娄底', lat: 27.73, lon: 111.98, visited: false },
-    { name: '邵阳', lat: 27.25, lon: 111.47, visited: false },
-    { name: '永州', lat: 26.43, lon: 111.62, visited: false },
-    { name: '郴州', lat: 25.80, lon: 113.03, visited: false },
-    { name: '益阳', lat: 28.55, lon: 112.35, visited: false },
-    { name: '湘西', lat: 28.32, lon: 109.73, visited: false },
-  ],
-  '湖北省': [
-    { name: '武汉', lat: 30.58, lon: 114.30, visited: true },
-    { name: '宜昌', lat: 30.70, lon: 111.29, visited: true },
-    { name: '襄阳', lat: 32.04, lon: 112.14, visited: true },
-    { name: '荆州', lat: 30.33, lon: 112.23, visited: false },
-    { name: '黄冈', lat: 30.45, lon: 114.88, visited: false },
-    { name: '十堰', lat: 32.65, lon: 110.80, visited: false },
-    { name: '荆门', lat: 31.03, lon: 112.20, visited: false },
-    { name: '鄂州', lat: 30.39, lon: 114.89, visited: true },
-    { name: '孝感', lat: 30.93, lon: 113.92, visited: true },
-    { name: '黄石', lat: 30.20, lon: 115.08, visited: true },
-    { name: '咸宁', lat: 29.85, lon: 114.33, visited: false },
-    { name: '随州', lat: 31.72, lon: 113.37, visited: false },
-    { name: '恩施', lat: 30.27, lon: 109.48, visited: false },
-  ],
-};
+import { PROVINCE_CITIES } from '../data/china-cities';
+import { CITY_NAME_TO_ABBR } from '../data/photo-data';
 
 // Convert lat/lng to SVG coords (same projection as province data)
 const MIN_LON = 73.502355;
@@ -68,9 +23,11 @@ function geoToSvg(lon: number, lat: number) {
 type ViewState = 'overview' | 'province';
 
 export default function Journey() {
+  const navigate = useNavigate();
   const [viewState, setViewState] = useState<ViewState>('overview');
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [hoveredProvince, setHoveredProvince] = useState<string | null>(null);
+  const [hoveredCity, setHoveredCity] = useState<string | null>(null);
 
   const { viewBox, provinces } = provinceData;
 
@@ -219,33 +176,61 @@ export default function Journey() {
                 );
               })()}
 
-              {/* 城市标记（省份视图）- 根据省份范围自适应排版 */}
-              {!isOverview && (() => {
-                // 根据省份地理范围动态计算缩放比例
-                const pBounds = currentProvince ? getPathBounds(currentProvince.path) : null;
-                const pW = pBounds ? Math.max(pBounds.maxX - pBounds.minX, 1) : 30;
-                const pH = pBounds ? Math.max(pBounds.maxY - pBounds.minY, 1) : 30;
-                const pSize = Math.sqrt(pW * pH);
-                const REF_SIZE = 32;
-                const cityCount = currentCities.length;
+              {/* 城市标记 */}
+              {(() => {
+                // 收集要显示的城市：总览视图显示所有城市，省份视图显示当前省份城市
+                const citiesToShow = isOverview
+                  ? Object.entries(PROVINCE_CITIES).flatMap(([, cities]) => cities)
+                  : currentCities;
 
-                let scale = pSize / REF_SIZE;
+                if (citiesToShow.length === 0) return null;
 
-                // 密集省份（城市多面积小）进一步缩小
-                const density = cityCount / Math.max((pW * pH) / 500, 0.3);
-                if (density > 2.0) scale *= 0.55;
-                else if (density > 1.2) scale *= 0.75;
-                else if (density > 0.7) scale *= 0.88;
+                // 根据视图计算缩放比例
+                let scale: number;
+                let DOT_R: number;
+                let TXT_SIZE: number;
+                let TXT_OFFSET: number;
+                let EST_CHAR_W: number;
+                let EST_LINE_H: number;
+                let BBOX_PAD_X: number;
+                let BBOX_PAD_Y: number;
 
-                scale = Math.max(0.3, Math.min(2.5, scale));
+                if (isOverview) {
+                  // 总览视图：固定小尺寸，适合全国视图
+                  scale = 0.4;
+                  DOT_R = 0.28;
+                  TXT_SIZE = 1.1;
+                  TXT_OFFSET = 1.5;
+                  EST_CHAR_W = 0.85;
+                  EST_LINE_H = 1.6;
+                  BBOX_PAD_X = 0.2;
+                  BBOX_PAD_Y = 0.2;
+                } else {
+                  // 省份视图：根据省份范围动态计算缩放比例
+                  const pBounds = currentProvince ? getPathBounds(currentProvince.path) : null;
+                  const pW = pBounds ? Math.max(pBounds.maxX - pBounds.minX, 1) : 30;
+                  const pH = pBounds ? Math.max(pBounds.maxY - pBounds.minY, 1) : 30;
+                  const pSize = Math.sqrt(pW * pH);
+                  const REF_SIZE = 32;
+                  const cityCount = citiesToShow.length;
 
-                const DOT_R = 0.35 * scale;
-                const TXT_SIZE = 1.75 * scale;
-                const TXT_OFFSET = 1.8 * scale;
-                const EST_CHAR_W = 1.15 * scale;
-                const EST_LINE_H = 2.1 * scale;
-                const BBOX_PAD_X = 0.25 * scale;
-                const BBOX_PAD_Y = 0.25 * scale;
+                  scale = pSize / REF_SIZE;
+
+                  const density = cityCount / Math.max((pW * pH) / 500, 0.3);
+                  if (density > 2.0) scale *= 0.55;
+                  else if (density > 1.2) scale *= 0.75;
+                  else if (density > 0.7) scale *= 0.88;
+
+                  scale = Math.max(0.3, Math.min(2.5, scale));
+
+                  DOT_R = 0.35 * scale;
+                  TXT_SIZE = 1.75 * scale;
+                  TXT_OFFSET = 1.8 * scale;
+                  EST_CHAR_W = 1.15 * scale;
+                  EST_LINE_H = 2.1 * scale;
+                  BBOX_PAD_X = 0.25 * scale;
+                  BBOX_PAD_Y = 0.25 * scale;
+                }
 
                 const estLabelW = (name: string) => name.length * EST_CHAR_W;
 
@@ -258,7 +243,7 @@ export default function Journey() {
                     by + bh + BBOX_PAD_Y > p.y && p.y + p.h + BBOX_PAD_Y > by
                   );
 
-                const sorted = [...currentCities]
+                const sorted = [...citiesToShow]
                   .map(city => ({ ...city, pos: geoToSvg(city.lon, city.lat) }))
                   .sort((a, b) => a.pos.y - b.pos.y);
 
@@ -314,29 +299,44 @@ export default function Journey() {
                   }
                 }
 
-                return labels.map(label => (
-                  <g key={label.name}>
+                return labels.map(label => {
+                  const isCityHovered = hoveredCity === label.name;
+                  const hasPhotos = label.visited && CITY_NAME_TO_ABBR[label.name] !== undefined;
+
+                  return (
+                  <g key={label.name}
+                    onMouseEnter={() => label.visited && setHoveredCity(label.name)}
+                    onMouseLeave={() => setHoveredCity(null)}
+                    onClick={() => {
+                      if (hasPhotos) {
+                        navigate(`/gallery?city=${encodeURIComponent(label.name)}`);
+                      }
+                    }}
+                    style={{ cursor: hasPhotos ? 'pointer' : 'default' }}
+                  >
                     <circle
                       cx={label.cx}
                       cy={label.cy}
                       r={DOT_R}
-                      fill={label.visited ? '#59c18b' : '#6b7280'}
+                      fill={isCityHovered && label.visited ? '#f97316' : label.visited ? '#3b82f6' : '#6b7280'}
                       opacity={label.visited ? 1 : 0.5}
+                      className="transition-colors duration-200"
                     />
                     <text
                       x={label.lx}
                       y={label.ly}
-                      fill={label.visited ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)'}
+                      fill={isCityHovered && label.visited ? '#f97316' : label.visited ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)'}
                       fontSize={TXT_SIZE}
                       fontFamily="sans-serif"
                       textAnchor={label.anchor}
                       dominantBaseline="central"
-                      className="select-none"
+                      className="select-none transition-colors duration-200"
                     >
                       {label.name}
                     </text>
                   </g>
-                ));
+                  );
+                });
               })()}
             </svg>
           </div>
@@ -347,12 +347,14 @@ export default function Journey() {
               <div className="w-4 h-0.5 border-t border-dashed border-white" />
               <span>省份边界</span>
             </div>
-            {!isOverview && (
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-mint" />
-                <span>城市</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <span>已去过</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-gray-500" />
+              <span>未去过</span>
+            </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded border border-white bg-transparent" />
               <span>可点击</span>

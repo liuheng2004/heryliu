@@ -2,417 +2,51 @@ import React, { useState } from 'react';
 import { MapPin, ArrowLeft } from 'lucide-react';
 import provinceData from '../data/china-provinces.json';
 
-// 省级城市数据（完整地级市）
-const PROVINCE_CITIES: Record<string, { name: string; lat: number; lon: number }[]> = {
-  '北京市': [
-    { name: '北京', lat: 39.90, lon: 116.40 },
-  ],
-  '天津市': [
-    { name: '天津', lat: 39.13, lon: 117.20 },
-  ],
-  '河北省': [
-    { name: '石家庄', lat: 38.05, lon: 114.50 },
-    { name: '唐山', lat: 39.63, lon: 118.18 },
-    { name: '保定', lat: 38.87, lon: 115.47 },
-    { name: '邯郸', lat: 36.60, lon: 114.48 },
-    { name: '秦皇岛', lat: 39.93, lon: 119.60 },
-    { name: '张家口', lat: 40.77, lon: 114.88 },
-    { name: '承德', lat: 40.95, lon: 117.95 },
-    { name: '廊坊', lat: 39.52, lon: 116.70 },
-    { name: '沧州', lat: 38.30, lon: 116.83 },
-    { name: '衡水', lat: 37.73, lon: 115.67 },
-    { name: '邢台', lat: 37.07, lon: 114.50 },
-  ],
-  '山西省': [
-    { name: '太原', lat: 37.87, lon: 112.55 },
-    { name: '大同', lat: 40.08, lon: 113.30 },
-    { name: '晋中', lat: 37.68, lon: 112.75 },
-    { name: '临汾', lat: 36.08, lon: 111.52 },
-    { name: '长治', lat: 36.20, lon: 113.12 },
-    { name: '运城', lat: 35.03, lon: 110.98 },
-    { name: '晋城', lat: 35.50, lon: 112.85 },
-    { name: '朔州', lat: 39.33, lon: 112.43 },
-    { name: '忻州', lat: 38.42, lon: 112.73 },
-    { name: '吕梁', lat: 37.52, lon: 111.13 },
-  ],
-  '内蒙古自治区': [
-    { name: '呼和浩特', lat: 40.82, lon: 111.75 },
-    { name: '包头', lat: 40.65, lon: 109.84 },
-    { name: '赤峰', lat: 42.27, lon: 118.97 },
-    { name: '通辽', lat: 43.62, lon: 122.27 },
-    { name: '鄂尔多斯', lat: 39.62, lon: 109.78 },
-    { name: '呼伦贝尔', lat: 49.22, lon: 119.75 },
-    { name: '乌兰察布', lat: 40.90, lon: 113.12 },
-    { name: '巴彦淖尔', lat: 40.73, lon: 107.42 },
-    { name: '兴安盟', lat: 46.08, lon: 122.05 },
-    { name: '锡林郭勒', lat: 43.95, lon: 116.05 },
-  ],
-  '辽宁省': [
-    { name: '沈阳', lat: 41.80, lon: 123.43 },
-    { name: '大连', lat: 38.91, lon: 121.61 },
-    { name: '鞍山', lat: 41.08, lon: 122.98 },
-    { name: '抚顺', lat: 41.87, lon: 123.92 },
-    { name: '锦州', lat: 41.13, lon: 121.13 },
-    { name: '营口', lat: 40.67, lon: 122.23 },
-    { name: '盘锦', lat: 41.12, lon: 122.07 },
-    { name: '丹东', lat: 40.12, lon: 124.38 },
-    { name: '辽阳', lat: 41.27, lon: 123.17 },
-    { name: '本溪', lat: 41.30, lon: 123.77 },
-    { name: '阜新', lat: 42.02, lon: 121.75 },
-    { name: '朝阳', lat: 41.57, lon: 120.45 },
-    { name: '葫芦岛', lat: 40.72, lon: 120.83 },
-  ],
-  '吉林省': [
-    { name: '长春', lat: 43.88, lon: 125.32 },
-    { name: '吉林', lat: 43.83, lon: 126.56 },
-    { name: '四平', lat: 43.17, lon: 124.37 },
-    { name: '延吉', lat: 42.90, lon: 129.51 },
-    { name: '通化', lat: 41.73, lon: 125.93 },
-    { name: '松原', lat: 45.13, lon: 124.83 },
-    { name: '白城', lat: 45.62, lon: 122.83 },
-    { name: '辽源', lat: 42.88, lon: 125.13 },
-    { name: '白山', lat: 41.93, lon: 126.42 },
-  ],
-  '黑龙江省': [
-    { name: '哈尔滨', lat: 45.75, lon: 126.64 },
-    { name: '大庆', lat: 46.59, lon: 125.10 },
-    { name: '齐齐哈尔', lat: 47.35, lon: 123.95 },
-    { name: '牡丹江', lat: 44.58, lon: 129.60 },
-    { name: '佳木斯', lat: 46.82, lon: 130.37 },
-    { name: '绥化', lat: 46.63, lon: 126.98 },
-    { name: '鸡西', lat: 45.30, lon: 130.97 },
-    { name: '鹤岗', lat: 47.33, lon: 130.28 },
-    { name: '双鸭山', lat: 46.63, lon: 131.15 },
-    { name: '伊春', lat: 47.73, lon: 128.90 },
-    { name: '七台河', lat: 45.77, lon: 131.00 },
-    { name: '黑河', lat: 50.25, lon: 127.48 },
-  ],
-  '上海市': [
-    { name: '上海', lat: 31.23, lon: 121.47 },
-  ],
-  '江苏省': [
-    { name: '南京', lat: 32.06, lon: 118.78 },
-    { name: '苏州', lat: 31.30, lon: 120.58 },
-    { name: '无锡', lat: 31.57, lon: 120.31 },
-    { name: '常州', lat: 31.78, lon: 119.97 },
-    { name: '南通', lat: 32.02, lon: 120.86 },
-    { name: '徐州', lat: 34.27, lon: 117.18 },
-    { name: '扬州', lat: 32.39, lon: 119.42 },
-    { name: '镇江', lat: 32.20, lon: 119.45 },
-    { name: '盐城', lat: 33.38, lon: 120.13 },
-    { name: '淮安', lat: 33.50, lon: 119.02 },
-    { name: '连云港', lat: 34.60, lon: 119.17 },
-    { name: '泰州', lat: 32.46, lon: 119.92 },
-    { name: '宿迁', lat: 33.96, lon: 118.30 },
-  ],
+// 城市数据（visited: true=已去过绿色, false=未去过灰色）
+const PROVINCE_CITIES: Record<string, { name: string; lat: number; lon: number; visited: boolean }[]> = {
   '浙江省': [
-    { name: '杭州', lat: 30.27, lon: 120.15 },
-    { name: '宁波', lat: 29.87, lon: 121.54 },
-    { name: '温州', lat: 28.00, lon: 120.70 },
-    { name: '嘉兴', lat: 30.77, lon: 120.75 },
-    { name: '绍兴', lat: 30.00, lon: 120.58 },
-    { name: '台州', lat: 28.65, lon: 121.42 },
-    { name: '金华', lat: 29.10, lon: 119.65 },
-    { name: '湖州', lat: 30.87, lon: 120.10 },
-    { name: '衢州', lat: 28.97, lon: 118.87 },
-    { name: '舟山', lat: 30.02, lon: 122.20 },
-    { name: '丽水', lat: 28.45, lon: 119.92 },
-  ],
-  '安徽省': [
-    { name: '合肥', lat: 31.82, lon: 117.23 },
-    { name: '芜湖', lat: 31.35, lon: 118.38 },
-    { name: '安庆', lat: 30.53, lon: 117.05 },
-    { name: '蚌埠', lat: 32.93, lon: 117.38 },
-    { name: '马鞍山', lat: 31.70, lon: 118.48 },
-    { name: '阜阳', lat: 32.90, lon: 115.82 },
-    { name: '黄山', lat: 29.72, lon: 118.33 },
-    { name: '滁州', lat: 32.30, lon: 118.32 },
-    { name: '六安', lat: 31.73, lon: 116.50 },
-    { name: '淮南', lat: 32.63, lon: 116.98 },
-    { name: '淮北', lat: 33.97, lon: 116.78 },
-    { name: '铜陵', lat: 30.93, lon: 117.82 },
-    { name: '池州', lat: 30.67, lon: 117.48 },
-    { name: '宣城', lat: 30.95, lon: 118.75 },
-  ],
-  '福建省': [
-    { name: '福州', lat: 26.07, lon: 119.30 },
-    { name: '厦门', lat: 24.48, lon: 118.09 },
-    { name: '泉州', lat: 24.90, lon: 118.58 },
-    { name: '漳州', lat: 24.52, lon: 117.65 },
-    { name: '莆田', lat: 25.43, lon: 119.02 },
-    { name: '龙岩', lat: 25.10, lon: 117.03 },
-    { name: '三明', lat: 26.27, lon: 117.62 },
-    { name: '南平', lat: 26.63, lon: 118.18 },
-    { name: '宁德', lat: 26.67, lon: 119.52 },
-  ],
-  '江西省': [
-    { name: '南昌', lat: 28.68, lon: 115.86 },
-    { name: '九江', lat: 29.70, lon: 115.98 },
-    { name: '赣州', lat: 25.85, lon: 114.93 },
-    { name: '景德镇', lat: 29.28, lon: 117.18 },
-    { name: '上饶', lat: 28.45, lon: 117.97 },
-    { name: '宜春', lat: 27.80, lon: 114.38 },
-    { name: '吉安', lat: 27.12, lon: 114.98 },
-    { name: '抚州', lat: 28.00, lon: 116.35 },
-    { name: '萍乡', lat: 27.63, lon: 113.85 },
-    { name: '新余', lat: 27.82, lon: 114.92 },
-    { name: '鹰潭', lat: 28.28, lon: 117.03 },
-  ],
-  '山东省': [
-    { name: '济南', lat: 36.65, lon: 117.00 },
-    { name: '青岛', lat: 36.07, lon: 120.38 },
-    { name: '烟台', lat: 37.47, lon: 121.45 },
-    { name: '潍坊', lat: 36.70, lon: 119.10 },
-    { name: '临沂', lat: 35.05, lon: 118.35 },
-    { name: '淄博', lat: 36.78, lon: 118.05 },
-    { name: '济宁', lat: 35.42, lon: 116.58 },
-    { name: '威海', lat: 37.50, lon: 122.12 },
-    { name: '泰安', lat: 36.20, lon: 117.08 },
-    { name: '日照', lat: 35.42, lon: 119.53 },
-    { name: '东营', lat: 37.45, lon: 118.50 },
-    { name: '德州', lat: 37.45, lon: 116.30 },
-    { name: '聊城', lat: 36.45, lon: 115.98 },
-    { name: '滨州', lat: 37.37, lon: 117.97 },
-    { name: '菏泽', lat: 35.23, lon: 115.43 },
-    { name: '枣庄', lat: 34.82, lon: 117.32 },
-  ],
-  '河南省': [
-    { name: '郑州', lat: 34.75, lon: 113.63 },
-    { name: '洛阳', lat: 34.62, lon: 112.45 },
-    { name: '开封', lat: 34.80, lon: 114.30 },
-    { name: '新乡', lat: 35.30, lon: 113.87 },
-    { name: '安阳', lat: 36.10, lon: 114.35 },
-    { name: '许昌', lat: 34.03, lon: 113.85 },
-    { name: '南阳', lat: 33.00, lon: 112.52 },
-    { name: '商丘', lat: 34.42, lon: 115.65 },
-    { name: '平顶山', lat: 33.73, lon: 113.18 },
-    { name: '周口', lat: 33.63, lon: 114.63 },
-    { name: '驻马店', lat: 32.98, lon: 113.38 },
-    { name: '信阳', lat: 32.13, lon: 114.08 },
-    { name: '焦作', lat: 35.25, lon: 113.25 },
-    { name: '濮阳', lat: 35.77, lon: 115.03 },
-    { name: '漯河', lat: 33.58, lon: 114.02 },
-    { name: '三门峡', lat: 34.78, lon: 111.20 },
-    { name: '鹤壁', lat: 35.90, lon: 114.30 },
-  ],
-  '湖北省': [
-    { name: '武汉', lat: 30.60, lon: 114.30 },
-    { name: '宜昌', lat: 30.70, lon: 111.28 },
-    { name: '襄阳', lat: 32.08, lon: 112.15 },
-    { name: '荆州', lat: 30.33, lon: 112.23 },
-    { name: '黄石', lat: 30.22, lon: 115.07 },
-    { name: '十堰', lat: 32.63, lon: 110.80 },
-    { name: '荆门', lat: 31.03, lon: 112.20 },
-    { name: '鄂州', lat: 30.38, lon: 114.88 },
-    { name: '孝感', lat: 30.92, lon: 113.92 },
-    { name: '黄冈', lat: 30.45, lon: 114.88 },
-    { name: '咸宁', lat: 29.83, lon: 114.32 },
-    { name: '随州', lat: 31.72, lon: 113.37 },
-    { name: '恩施', lat: 30.28, lon: 109.48 },
+    { name: '杭州', lat: 30.25, lon: 120.17, visited: true },
+    { name: '宁波', lat: 29.87, lon: 121.55, visited: false },
+    { name: '温州', lat: 28.00, lon: 120.70, visited: false },
+    { name: '绍兴', lat: 30.00, lon: 120.58, visited: false },
+    { name: '嘉兴', lat: 30.77, lon: 120.75, visited: false },
+    { name: '湖州', lat: 30.87, lon: 120.10, visited: false },
+    { name: '金华', lat: 29.08, lon: 119.65, visited: false },
+    { name: '台州', lat: 28.66, lon: 121.42, visited: false },
+    { name: '丽水', lat: 28.45, lon: 119.92, visited: false },
+    { name: '衢州', lat: 28.95, lon: 118.87, visited: false },
+    { name: '舟山', lat: 30.02, lon: 122.11, visited: true },
   ],
   '湖南省': [
-    { name: '长沙', lat: 28.23, lon: 112.98 },
-    { name: '岳阳', lat: 29.37, lon: 113.13 },
-    { name: '株洲', lat: 27.83, lon: 113.13 },
-    { name: '湘潭', lat: 27.85, lon: 112.93 },
-    { name: '衡阳', lat: 26.90, lon: 112.62 },
-    { name: '常德', lat: 29.03, lon: 111.68 },
-    { name: '郴州', lat: 25.78, lon: 113.02 },
-    { name: '怀化', lat: 27.55, lon: 109.97 },
-    { name: '娄底', lat: 27.73, lon: 112.00 },
-    { name: '益阳', lat: 28.58, lon: 112.33 },
-    { name: '永州', lat: 26.42, lon: 111.60 },
-    { name: '邵阳', lat: 27.23, lon: 111.47 },
-    { name: '张家界', lat: 29.13, lon: 110.48 },
-    { name: '湘西', lat: 28.32, lon: 109.73 },
+    { name: '长沙', lat: 28.23, lon: 112.93, visited: true },
+    { name: '株洲', lat: 27.83, lon: 113.13, visited: false },
+    { name: '湘潭', lat: 27.83, lon: 112.93, visited: false },
+    { name: '衡阳', lat: 26.90, lon: 112.57, visited: false },
+    { name: '岳阳', lat: 29.35, lon: 113.12, visited: false },
+    { name: '常德', lat: 29.05, lon: 111.70, visited: false },
+    { name: '张家界', lat: 29.12, lon: 110.48, visited: true },
+    { name: '怀化', lat: 27.55, lon: 109.97, visited: true },
+    { name: '娄底', lat: 27.73, lon: 111.98, visited: false },
+    { name: '邵阳', lat: 27.25, lon: 111.47, visited: false },
+    { name: '永州', lat: 26.43, lon: 111.62, visited: false },
+    { name: '郴州', lat: 25.80, lon: 113.03, visited: false },
+    { name: '益阳', lat: 28.55, lon: 112.35, visited: false },
+    { name: '湘西', lat: 28.32, lon: 109.73, visited: false },
   ],
-  '广东省': [
-    { name: '广州', lat: 23.13, lon: 113.26 },
-    { name: '深圳', lat: 22.55, lon: 114.07 },
-    { name: '珠海', lat: 22.27, lon: 113.57 },
-    { name: '东莞', lat: 23.02, lon: 113.75 },
-    { name: '佛山', lat: 23.03, lon: 113.12 },
-    { name: '中山', lat: 22.52, lon: 113.38 },
-    { name: '惠州', lat: 23.08, lon: 114.40 },
-    { name: '汕头', lat: 23.37, lon: 116.70 },
-    { name: '湛江', lat: 21.27, lon: 110.35 },
-    { name: '肇庆', lat: 23.05, lon: 112.47 },
-    { name: '江门', lat: 22.58, lon: 113.08 },
-    { name: '潮州', lat: 23.67, lon: 116.63 },
-    { name: '揭阳', lat: 23.55, lon: 116.37 },
-    { name: '韶关', lat: 24.80, lon: 113.60 },
-    { name: '茂名', lat: 21.67, lon: 110.92 },
-    { name: '梅州', lat: 24.30, lon: 116.12 },
-    { name: '汕尾', lat: 22.78, lon: 115.37 },
-    { name: '河源', lat: 23.73, lon: 114.68 },
-    { name: '阳江', lat: 21.85, lon: 111.97 },
-    { name: '清远', lat: 23.70, lon: 113.05 },
-    { name: '云浮', lat: 22.92, lon: 112.03 },
-  ],
-  '广西壮族自治区': [
-    { name: '南宁', lat: 22.82, lon: 108.37 },
-    { name: '桂林', lat: 25.27, lon: 110.29 },
-    { name: '柳州', lat: 24.32, lon: 109.42 },
-    { name: '北海', lat: 21.48, lon: 109.12 },
-    { name: '玉林', lat: 22.63, lon: 110.15 },
-    { name: '梧州', lat: 23.48, lon: 111.28 },
-    { name: '百色', lat: 23.90, lon: 106.62 },
-    { name: '钦州', lat: 21.95, lon: 108.62 },
-    { name: '防城港', lat: 21.68, lon: 108.35 },
-    { name: '贵港', lat: 23.10, lon: 109.60 },
-    { name: '贺州', lat: 24.42, lon: 111.55 },
-    { name: '河池', lat: 24.70, lon: 108.07 },
-    { name: '来宾', lat: 23.73, lon: 109.23 },
-    { name: '崇左', lat: 22.38, lon: 107.37 },
-  ],
-  '海南省': [
-    { name: '海口', lat: 20.02, lon: 110.33 },
-    { name: '三亚', lat: 18.25, lon: 109.51 },
-    { name: '儋州', lat: 19.52, lon: 109.58 },
-    { name: '琼海', lat: 19.25, lon: 110.47 },
-    { name: '文昌', lat: 19.55, lon: 110.80 },
-    { name: '万宁', lat: 18.80, lon: 110.40 },
-    { name: '东方', lat: 19.10, lon: 108.65 },
-  ],
-  '重庆市': [
-    { name: '重庆', lat: 29.57, lon: 106.55 },
-  ],
-  '四川省': [
-    { name: '成都', lat: 30.57, lon: 104.07 },
-    { name: '绵阳', lat: 31.47, lon: 104.73 },
-    { name: '德阳', lat: 31.13, lon: 104.38 },
-    { name: '宜宾', lat: 28.77, lon: 104.62 },
-    { name: '南充', lat: 30.78, lon: 106.10 },
-    { name: '泸州', lat: 28.88, lon: 105.43 },
-    { name: '乐山', lat: 29.58, lon: 103.73 },
-    { name: '自贡', lat: 29.35, lon: 104.78 },
-    { name: '达州', lat: 31.22, lon: 107.50 },
-    { name: '内江', lat: 29.58, lon: 105.05 },
-    { name: '遂宁', lat: 30.52, lon: 105.57 },
-    { name: '广元', lat: 32.43, lon: 105.85 },
-    { name: '眉山', lat: 30.05, lon: 103.83 },
-    { name: '广安', lat: 30.47, lon: 106.63 },
-    { name: '攀枝花', lat: 26.58, lon: 101.72 },
-    { name: '巴中', lat: 31.85, lon: 106.77 },
-    { name: '资阳', lat: 30.12, lon: 104.63 },
-    { name: '雅安', lat: 29.98, lon: 103.00 },
-    { name: '西昌', lat: 27.90, lon: 102.27 },
-  ],
-  '贵州省': [
-    { name: '贵阳', lat: 26.65, lon: 106.63 },
-    { name: '遵义', lat: 27.73, lon: 106.92 },
-    { name: '六盘水', lat: 26.60, lon: 104.83 },
-    { name: '安顺', lat: 26.25, lon: 105.95 },
-    { name: '毕节', lat: 27.30, lon: 105.28 },
-    { name: '铜仁', lat: 27.72, lon: 109.18 },
-    { name: '黔东南', lat: 26.58, lon: 107.97 },
-    { name: '黔南', lat: 26.25, lon: 107.52 },
-    { name: '黔西南', lat: 25.08, lon: 104.90 },
-  ],
-  '云南省': [
-    { name: '昆明', lat: 25.05, lon: 102.72 },
-    { name: '大理', lat: 25.59, lon: 100.23 },
-    { name: '丽江', lat: 26.87, lon: 100.23 },
-    { name: '曲靖', lat: 25.50, lon: 103.80 },
-    { name: '玉溪', lat: 24.35, lon: 102.55 },
-    { name: '红河', lat: 23.37, lon: 103.37 },
-    { name: '西双版纳', lat: 22.02, lon: 100.80 },
-    { name: '楚雄', lat: 25.03, lon: 101.55 },
-    { name: '保山', lat: 25.12, lon: 99.17 },
-    { name: '昭通', lat: 27.33, lon: 103.72 },
-    { name: '普洱', lat: 22.78, lon: 100.97 },
-    { name: '文山', lat: 23.37, lon: 104.25 },
-    { name: '德宏', lat: 24.43, lon: 98.58 },
-    { name: '怒江', lat: 25.85, lon: 98.85 },
-    { name: '迪庆', lat: 27.82, lon: 99.70 },
-  ],
-  '西藏自治区': [
-    { name: '拉萨', lat: 29.65, lon: 91.13 },
-    { name: '日喀则', lat: 29.27, lon: 88.88 },
-    { name: '林芝', lat: 29.58, lon: 94.48 },
-    { name: '昌都', lat: 31.13, lon: 97.18 },
-    { name: '那曲', lat: 31.48, lon: 92.05 },
-    { name: '山南', lat: 29.23, lon: 91.77 },
-    { name: '阿里', lat: 30.40, lon: 81.13 },
-  ],
-  '陕西省': [
-    { name: '西安', lat: 34.26, lon: 108.94 },
-    { name: '咸阳', lat: 34.33, lon: 108.71 },
-    { name: '宝鸡', lat: 34.37, lon: 107.15 },
-    { name: '渭南', lat: 34.50, lon: 109.50 },
-    { name: '延安', lat: 36.58, lon: 109.48 },
-    { name: '榆林', lat: 38.28, lon: 109.73 },
-    { name: '汉中', lat: 33.07, lon: 107.03 },
-    { name: '安康', lat: 32.68, lon: 109.02 },
-    { name: '商洛', lat: 33.87, lon: 109.93 },
-    { name: '铜川', lat: 34.90, lon: 108.98 },
-  ],
-  '甘肃省': [
-    { name: '兰州', lat: 36.06, lon: 103.83 },
-    { name: '天水', lat: 34.58, lon: 105.73 },
-    { name: '酒泉', lat: 39.73, lon: 98.50 },
-    { name: '嘉峪关', lat: 39.78, lon: 98.28 },
-    { name: '庆阳', lat: 35.73, lon: 107.63 },
-    { name: '平凉', lat: 35.55, lon: 106.67 },
-    { name: '张掖', lat: 38.93, lon: 100.45 },
-    { name: '武威', lat: 37.93, lon: 102.63 },
-    { name: '陇南', lat: 33.37, lon: 104.92 },
-    { name: '白银', lat: 36.55, lon: 104.18 },
-    { name: '金昌', lat: 38.48, lon: 102.18 },
-    { name: '临夏', lat: 35.60, lon: 103.22 },
-    { name: '甘南', lat: 34.98, lon: 102.92 },
-  ],
-  '青海省': [
-    { name: '西宁', lat: 36.62, lon: 101.78 },
-    { name: '海东', lat: 36.50, lon: 102.12 },
-    { name: '格尔木', lat: 36.42, lon: 94.90 },
-    { name: '玉树', lat: 33.00, lon: 97.02 },
-    { name: '德令哈', lat: 37.37, lon: 97.37 },
-    { name: '海南', lat: 36.28, lon: 100.62 },
-    { name: '海北', lat: 36.97, lon: 100.90 },
-    { name: '黄南', lat: 35.52, lon: 102.02 },
-    { name: '果洛', lat: 34.47, lon: 100.23 },
-  ],
-  '宁夏回族自治区': [
-    { name: '银川', lat: 38.47, lon: 106.27 },
-    { name: '石嘴山', lat: 39.02, lon: 106.38 },
-    { name: '吴忠', lat: 37.98, lon: 106.20 },
-    { name: '中卫', lat: 37.52, lon: 105.18 },
-    { name: '固原', lat: 36.00, lon: 106.28 },
-  ],
-  '新疆维吾尔自治区': [
-    { name: '乌鲁木齐', lat: 43.80, lon: 87.62 },
-    { name: '克拉玛依', lat: 45.60, lon: 84.87 },
-    { name: '伊宁', lat: 43.92, lon: 81.32 },
-    { name: '喀什', lat: 39.47, lon: 75.98 },
-    { name: '吐鲁番', lat: 42.95, lon: 89.18 },
-    { name: '库尔勒', lat: 41.73, lon: 86.13 },
-    { name: '石河子', lat: 44.30, lon: 86.03 },
-    { name: '阿克苏', lat: 41.17, lon: 80.27 },
-    { name: '哈密', lat: 42.82, lon: 93.52 },
-    { name: '昌吉', lat: 44.02, lon: 87.30 },
-    { name: '阿勒泰', lat: 47.83, lon: 88.13 },
-    { name: '塔城', lat: 46.75, lon: 82.98 },
-    { name: '博乐', lat: 44.90, lon: 82.07 },
-    { name: '和田', lat: 37.12, lon: 79.92 },
-    { name: '阿图什', lat: 39.72, lon: 76.17 },
-  ],
-  '台湾省': [
-    { name: '台北', lat: 25.05, lon: 121.50 },
-    { name: '高雄', lat: 22.63, lon: 120.30 },
-    { name: '台中', lat: 24.15, lon: 120.68 },
-    { name: '台南', lat: 23.00, lon: 120.20 },
-    { name: '桃园', lat: 24.98, lon: 121.30 },
-    { name: '新北', lat: 25.02, lon: 121.47 },
-    { name: '基隆', lat: 25.13, lon: 121.75 },
-    { name: '新竹', lat: 24.80, lon: 120.97 },
-    { name: '嘉义', lat: 23.48, lon: 120.45 },
-  ],
-  '香港特别行政区': [
-    { name: '香港', lat: 22.32, lon: 114.17 },
-  ],
-  '澳门特别行政区': [
-    { name: '澳门', lat: 22.20, lon: 113.55 },
+  '湖北省': [
+    { name: '武汉', lat: 30.58, lon: 114.30, visited: true },
+    { name: '宜昌', lat: 30.70, lon: 111.29, visited: true },
+    { name: '襄阳', lat: 32.04, lon: 112.14, visited: true },
+    { name: '荆州', lat: 30.33, lon: 112.23, visited: false },
+    { name: '黄冈', lat: 30.45, lon: 114.88, visited: false },
+    { name: '十堰', lat: 32.65, lon: 110.80, visited: false },
+    { name: '荆门', lat: 31.03, lon: 112.20, visited: false },
+    { name: '鄂州', lat: 30.39, lon: 114.89, visited: true },
+    { name: '孝感', lat: 30.93, lon: 113.92, visited: true },
+    { name: '黄石', lat: 30.20, lon: 115.08, visited: true },
+    { name: '咸宁', lat: 29.85, lon: 114.33, visited: false },
+    { name: '随州', lat: 31.72, lon: 113.37, visited: false },
+    { name: '恩施', lat: 30.27, lon: 109.48, visited: false },
   ],
 };
 
@@ -474,13 +108,13 @@ export default function Journey() {
     return { minX, minY, maxX, maxY };
   }
 
-  // Calculate viewBox so the province fills ~90% of the view
+  // Calculate viewBox with padding for labels
   const getProvinceViewBox = (): string => {
     if (!currentProvince) return viewBox;
     const bounds = getPathBounds(currentProvince.path);
     const pW = Math.max(bounds.maxX - bounds.minX, 1);
     const pH = Math.max(bounds.maxY - bounds.minY, 1);
-    const fill = 0.9;
+    const fill = 0.7;
     const vw = pW / fill;
     const vh = pH / fill;
     const vx = bounds.minX - (vw - pW) / 2;
@@ -591,7 +225,7 @@ export default function Journey() {
                 const pBounds = currentProvince ? getPathBounds(currentProvince.path) : null;
                 const pW = pBounds ? Math.max(pBounds.maxX - pBounds.minX, 1) : 30;
                 const pH = pBounds ? Math.max(pBounds.maxY - pBounds.minY, 1) : 30;
-                const pSize = Math.sqrt(pW * pH); // 省份面积开方，综合反映大小
+                const pSize = Math.sqrt(pW * pH);
                 const REF_SIZE = 32;
                 const cityCount = currentCities.length;
 
@@ -605,13 +239,13 @@ export default function Journey() {
 
                 scale = Math.max(0.3, Math.min(2.5, scale));
 
-                const DOT_R = 0.5 * scale;
-                const TXT_SIZE = 2.5 * scale;
-                const TXT_OFFSET = 2.6 * scale;
-                const EST_CHAR_W = 1.65 * scale;
-                const EST_LINE_H = 3.0 * scale;
-                const BBOX_PAD_X = 0.15 * scale;
-                const BBOX_PAD_Y = 0.12 * scale;
+                const DOT_R = 0.35 * scale;
+                const TXT_SIZE = 1.75 * scale;
+                const TXT_OFFSET = 1.8 * scale;
+                const EST_CHAR_W = 1.15 * scale;
+                const EST_LINE_H = 2.1 * scale;
+                const BBOX_PAD_X = 0.25 * scale;
+                const BBOX_PAD_Y = 0.25 * scale;
 
                 const estLabelW = (name: string) => name.length * EST_CHAR_W;
 
@@ -630,6 +264,7 @@ export default function Journey() {
 
                 interface Label {
                   name: string;
+                  visited: boolean;
                   cx: number; cy: number;
                   lx: number; ly: number;
                   anchor: 'start' | 'end';
@@ -639,10 +274,16 @@ export default function Journey() {
                 const candidates: [number, number, 'start' | 'end'][] = [
                   [1, 0, 'start'],
                   [-1, 0, 'end'],
-                  [1, -1.2, 'start'],
-                  [-1, -1.2, 'end'],
-                  [1, 1.2, 'start'],
-                  [-1, 1.2, 'end'],
+                  [1, -1, 'start'],
+                  [-1, -1, 'end'],
+                  [1, 1, 'start'],
+                  [-1, 1, 'end'],
+                  [1, -2, 'start'],
+                  [-1, -2, 'end'],
+                  [1, 2, 'start'],
+                  [-1, 2, 'end'],
+                  [1, -3, 'start'],
+                  [-1, -3, 'end'],
                 ];
 
                 for (const city of sorted) {
@@ -658,7 +299,7 @@ export default function Journey() {
                     const by = ly - th / 2;
 
                     if (!hasOverlap(bx, by, tw, th)) {
-                      labels.push({ name: city.name, cx: x, cy: y, lx, ly, anchor });
+                      labels.push({ name: city.name, visited: city.visited, cx: x, cy: y, lx, ly, anchor });
                       placed.push({ x: bx, y: by, w: tw, h: th });
                       placed_ok = true;
                       break;
@@ -668,7 +309,7 @@ export default function Journey() {
                   if (!placed_ok) {
                     const lx = x + TXT_OFFSET;
                     const ly = y;
-                    labels.push({ name: city.name, cx: x, cy: y, lx, ly, anchor: 'start' });
+                    labels.push({ name: city.name, visited: city.visited, cx: x, cy: y, lx, ly, anchor: 'start' });
                     placed.push({ x: lx - BBOX_PAD_X, y: ly - th / 2, w: tw, h: th });
                   }
                 }
@@ -679,12 +320,13 @@ export default function Journey() {
                       cx={label.cx}
                       cy={label.cy}
                       r={DOT_R}
-                      fill="#59c18b"
+                      fill={label.visited ? '#59c18b' : '#6b7280'}
+                      opacity={label.visited ? 1 : 0.5}
                     />
                     <text
                       x={label.lx}
                       y={label.ly}
-                      fill="rgba(255,255,255,0.9)"
+                      fill={label.visited ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.35)'}
                       fontSize={TXT_SIZE}
                       fontFamily="sans-serif"
                       textAnchor={label.anchor}
